@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+
+    <style>
+        body {
+            background-color: #e5e5f7;
+            background-image: linear-gradient(-45deg, #e5e5f7, #e5e5f7 50%, #dcdcdc 50%, #dcdcdc);
+            background-size: 28px 28px;
+        }
+
+        h1 {
+            font-family: "Platypi", serif;
+            font-optical-sizing: auto;
+            font-weight: weight;
+            font-style: normal;
+        }
+
+        a {
+            font-family: "Ysabeau Infant", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: weight;
+            font-style: normal;
+        }
+
+        h2 {
+            font-family: "Ysabeau Infant", sans-serif;
+            font-optical-sizing: auto;
+            font-weight: weight;
+            font-style: normal;
+        }
+
+        button {
+            font-family: "Sedan", serif;
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+        }
+
+        .sidebar a:hover {
+            background-color: #495057;
+        }
+
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Panel de Administrador</h2>
+        <a href="javascript:void(0);" onclick="loadContent('RegistroDocente.html')">Registrar Docente</a>
+        <a href="javascript:void(0);" onclick="loadContent('GestionDocentes.html')">Gestionar Docentes</a>
+        <a href="javascript:void(0);" onclick="loadContent('GestionAlumnos.html')">Gestionar Alumnos</a>
+        <a href="index.html">Cerrar Sesión</a>
+    </div>
+
+    <div class="content" id="main-content">
+        <h1>Bienvenido al Panel de Administrador</h1>
+        <p>Utiliza el menú a la izquierda para navegar por las opciones disponibles.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-functions.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDnLogrE97_pMkoX61w_uNSM6MwDMGN_I8",
+            authDomain: "generadorex-6ab43.firebaseapp.com",
+            projectId: "generadorex-6ab43",
+            storageBucket: "generadorex-6ab43.appspot.com",
+            messagingSenderId: "655158666019",
+            appId: "1:655158666019:web:3d3edab6b7d4aec4e02296"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        const functions = getFunctions(app);
+
+        // Cargar contenido dinámicamente
+        window.loadContent = function (page) {
+            fetch(page)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al cargar la página');
+                    return response.text();
+                })
+                .then(data => {
+                    document.getElementById('main-content').innerHTML = data;
+
+                    if (page === 'GestionDocentes.html') {
+                        loadDocentes(); // Llama a la función para cargar docentes
+                    }
+                    if (page === 'RegistroDocente.html') {
+                        setupFormListener(); // Llama la función de listener después de cargar el contenido
+                    }
+                    if (page === 'GestionAlumnos.html') {
+                        loadAlumnos(); // Llama a la función para cargar alumnos
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('main-content').innerHTML = `<p>Error: ${error.message}</p>`;
+                });
+        };
+
+        // Función para cargar docentes
+        window.loadDocentes = function () {
+            const docentesRef = ref(database, 'users');
+
+            onValue(docentesRef, (snapshot) => {
+                const docentes = snapshot.val();
+                const tableBody = document.getElementById('docentes-table-body');
+                tableBody.innerHTML = ''; // Limpia la tabla antes de cargar
+
+                for (const id in docentes) {
+                    if (docentes[id].role === 'Docente') {
+                        const docente = docentes[id];
+                        tableBody.innerHTML += `
+                        <tr>
+                            <td>${docente.nombre}</td>
+                            <td>${docente.apellidos}</td>
+                            <td>${docente.email}</td>
+                            <td>${docente.asignatura}</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="editDocente('${id}')">Editar</button>
+                                <button class="btn btn-danger" onclick="deleteDocente('${id}')">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                    }
+                }
+            }, (error) => {
+                console.error("Error al cargar docentes: ", error);
+                alert("Error al cargar docentes. Inténtalo de nuevo.");
+            });
+        }
+
+        // Función para editar docente
+        window.editDocente = function (id) {
+            const newName = prompt("Nuevo nombre del docente:");
+            const newSurname = prompt("Nuevo apellido del docente:");
+            const newEmail = prompt("Nuevo email del docente:");
+            const newSubject = prompt("Nueva asignatura del docente:");
+
+            if (newName && newSurname && newEmail && newSubject) {
+                const docenteRef = ref(database, `users/${id}`);
+                set(docenteRef, {
+                    nombre: newName,
+                    apellidos: newSurname,
+                    email: newEmail,
+                    asignatura: newSubject,
+                    role: 'Docente' // Asegúrate de que el role se mantenga como "Docente"
+                }).then(() => {
+                    loadDocentes(); // Recarga los docentes
+                }).catch(error => {
+                    alert('Error al actualizar el docente: ' + error.message);
+                });
+            }
+        }
+
+// Función para eliminar docente
+window.deleteDocente = function (id) {
+    console.log("ID del docente a eliminar:", id); // Verificar el ID
+    if (confirm('¿Estás seguro de que quieres eliminar este docente?')) {
+        const docenteRef = ref(database, `users/${id}`);
+
+        // Primero, elimina la referencia del docente en la base de datos en tiempo real
+        remove(docenteRef)
+            .then(() => {
+                console.log("Docente eliminado de la base de datos");
+
+                // Obtén el objeto de usuario de Firebase Authentication
+                const userRef = auth.currentUser;
+                // Elimina la cuenta de usuario de Authentication
+                if (userRef) {
+                    return userRef.delete();
+                } else {
+                    throw new Error('No hay usuario autenticado.');
+                }
+            })
+            .then(() => {
+                console.log("Cuenta de usuario eliminada exitosamente");
+                loadDocentes(); // Recarga la lista de docentes para actualizar los cambios
+            })
+            .catch(error => {
+                console.error('Error al eliminar el docente o la cuenta de usuario:', error);
+                alert('Error al eliminar el docente: ' + error.message);
+            });
+    }
+}
+
+
+        // Función para cargar alumnos
+        window.loadAlumnos = function () {
+            const alumnosRef = ref(database, 'users');
+
+            onValue(alumnosRef, (snapshot) => {
+                const alumnos = snapshot.val();
+                const tableBody = document.getElementById('alumnos-table-body');
+                tableBody.innerHTML = ''; // Limpia la tabla antes de cargar
+
+                for (const id in alumnos) {
+                    if (alumnos[id].role === 'Alumno') {
+                        const alumno = alumnos[id];
+                        tableBody.innerHTML += `
+                        <tr>
+                            <td>${alumno.fullName}</td>
+                            <td>${alumno.email}</td>
+                            <td>
+                                <button class="btn btn-warning" onclick="editAlumno('${id}')">Editar</button>
+                                <button class="btn btn-danger" onclick="deleteAlumno('${id}')">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                    }
+                }
+            }, (error) => {
+                console.error("Error al cargar alumnos: ", error);
+                alert("Error al cargar alumnos. Inténtalo de nuevo.");
+            });
+        }
+
+        // Función para editar alumno
+        window.editAlumno = function (id) {
+            const newName = prompt("Nuevo nombre del alumno:");
+            const newSurname = prompt("Nuevo apellido del alumno:");
+            const newEmail = prompt("Nuevo email del alumno:");
+
+            if (newName && newSurname && newEmail) {
+                const alumnoRef = ref(database, `users/${id}`);
+                set(alumnoRef, {
+                    nombre: newName,
+                    apellidos: newSurname,
+                    email: newEmail,
+                    role: 'Alumno' // Asegúrate de que el role se mantenga como "Alumno"
+                }).then(() => {
+                    loadAlumnos(); // Recarga los alumnos
+                }).catch(error => {
+                    alert('Error al actualizar el alumno: ' + error.message);
+                });
+            }
+        }
+
+// Función para eliminar alumno
+window.deleteAlumno = function (id) {
+    console.log("ID del alumno a eliminar:", id); // Verificar el ID
+    if (confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
+        const alumnoRef = ref(database, `users/${id}`);
+
+        // Primero, elimina la referencia del alumno en la base de datos en tiempo real
+        remove(alumnoRef)
+            .then(() => {
+                console.log("Alumno eliminado de la base de datos");
+
+                // Obtén el objeto de usuario de Firebase Authentication
+                const userRef = auth.currentUser;
+                // Elimina la cuenta de usuario de Authentication
+                if (userRef) {
+                    return userRef.delete();
+                } else {
+                    throw new Error('No hay usuario autenticado.');
+                }
+            })
+            .then(() => {
+                console.log("Cuenta de usuario eliminada exitosamente");
+                loadAlumnos(); // Recarga la lista de alumnos para actualizar los cambios
+            })
+            .catch(error => {
+                console.error("Error al eliminar el alumno o la cuenta de usuario:", error);
+                alert("Error al eliminar el alumno: " + error.message);
+            });
+    }
+}
+
+        // Inicializa el listener del formulario
+        function setupFormListener() {
+            const formDocente = document.getElementById('registro-form-docente');
+            if (formDocente) {
+                formDocente.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    const nombre = formDocente['nombre'].value.trim();
+                    const apellidos = formDocente['apellidos'].value.trim();
+                    const numEmpleado = formDocente['numEmpleado'].value.trim();
+                    const asignatura = formDocente['asignatura'].value.trim();
+
+                    const correoDocente = `${nombre.toLowerCase()}.${apellidos.toLowerCase().replace(/\s+/g, '')}@escuela.edu`;
+                    const passwordDocente = `${nombre.substring(0, 3).toLowerCase()}${numEmpleado}`;
+
+                    try {
+                        const userCredential = await createUserWithEmailAndPassword(auth, correoDocente, passwordDocente);
+                        const userId = userCredential.user.uid;
+
+                        await set(ref(database, 'users/' + userId), {
+                            nombre: nombre,
+                            apellidos: apellidos,
+                            numEmpleado: numEmpleado,
+                            asignatura: asignatura,
+                            email: correoDocente,
+                            contrasenia: passwordDocente,
+                            role: 'Docente'
+                        });
+
+                        const resultadoDocente = document.getElementById('resultado');
+                        resultadoDocente.classList.remove("d-none");
+                        resultadoDocente.innerHTML = `<strong>Registro exitoso.</strong><br>Correo electrónico: ${correoDocente}<br>Contraseña: ${passwordDocente}<br>Asignatura: ${asignatura}`;
+                        formDocente.reset();
+                    } catch (error) {
+                        console.error("Error al registrar el usuario:", error);
+                        const resultadoDocente = document.getElementById('resultado');
+                        resultadoDocente.classList.remove("d-none");
+                        resultadoDocente.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>

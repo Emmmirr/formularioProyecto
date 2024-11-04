@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Alumnos</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=AR+One+Sans:wght@400..700&family=Anton+SC&family=Arima:wght@100..700&family=Baskervville+SC&family=DynaPuff:wght@400..700&family=Edu+AU+VIC+WA+NT+Dots:wght@400..700&family=Edu+AU+VIC+WA+NT+Hand&family=Ga+Maamli&family=Kalnia+Glaze:wght@100..700&family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Lora:ital,wght@0,400..700;1,400..700&family=Madimi+One&family=Platypi:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Playpen+Sans:wght@100..800&family=Playwrite+DE+Grund:wght@100..400&family=Playwrite+GB+S:ital,wght@0,100..400;1,100..400&family=Poetsen+One&family=Protest+Riot&family=Rubik+Wet+Paint&family=Sedan:ital@0;1&family=Teachers:ital@1&family=Wittgenstein:ital,wght@0,400..900;1,400..900&family=Ysabeau+Infant:ital,wght@0,1..1000;1,1..1000&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #e5e5f7;
+            background-image: linear-gradient(135deg, #b5cad8 25%, transparent 25%), linear-gradient(225deg, #b5cad8 25%, transparent 25%), linear-gradient(45deg, #b5cad8 25%, transparent 25%), linear-gradient(315deg, #b5cad8 25%, #e5e5f7 25%);
+            background-position: 28px 0, 28px 0, 0 0, 0 0;
+            background-size: 56px 56px;
+            background-repeat: repeat;
+        }
+
+        h2 {
+            font-family: "Playpen Sans", cursive;
+            font-optical-sizing: auto;
+            font-weight: weight;
+            font-style: normal;
+        }
+
+        tbody {
+            background-color: #e5e5f7;
+        }
+
+        .table th,
+        .table td {
+            text-align: center;
+            background-color: #96cae2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h2>Lista de Alumnos</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="alumnos-table-body">
+                <!-- Los datos de los alumnos se cargarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="script.js" type="module"></script>
+</body>
+
+</html>

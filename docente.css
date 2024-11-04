@@ -1,0 +1,25 @@
+body {
+    display: flex;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-right: 1px solid #dee2e6;
+    position: fixed; /* Mantiene la barra lateral fija */
+    height: 100vh; /* Altura completa */
+}
+
+.main-content {
+    margin-left: 220px; /* Espacio para la barra lateral */
+    padding: 20px;
+    width: calc(100% - 220px); /* Ajusta el ancho */
+}
+
+.sidebar-toggle {
+    position: fixed; /* Fijo para que esté siempre visible */
+    top: 20px;
+    left: 20px;
+    z-index: 1000; /* Asegura que esté por encima */
+}

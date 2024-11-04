@@ -1,0 +1,227 @@
+/* Estilo general de la página */
+body {
+    background-color: #d1cdc4;
+    background: linear-gradient(135deg, #61603c55 25%, transparent 25%) -17px 0/ 34px 34px, linear-gradient(225deg, #61603c 25%, transparent 25%) -17px 0/ 34px 34px, linear-gradient(315deg, #61603c55 25%, transparent 25%) 0px 0/ 34px 34px, linear-gradient(45deg, #61603c 25%, #d1cdc4 25%) 0px 0/ 34px 34px;
+}
+
+label {
+    font-family: "Playwrite DE Grund", cursive;
+    font-optical-sizing: auto;
+    font-weight: weight;
+    font-style: normal;
+}
+
+a, button {
+    font-family: "Wittgenstein", serif;
+    font-optical-sizing: auto;
+    font-weight: weight;
+    font-style: normal;
+}
+
+.title1 {
+    font-family: "Rubik Wet Paint", serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.title3 {
+    font-family: "Arima", system-ui;
+    font-optical-sizing: auto;
+    font-weight: weight;
+    font-style: normal;
+}
+
+.title2 {
+    font-family: "Edu AU VIC WA NT Dots", cursive;
+    font-optical-sizing: auto; /* Esto es opcional y puede no ser soportado por todos los navegadores */
+    font-weight: normal; /* Puedes usar 'normal' o especificar un número como '400' */
+    font-style: normal; /* Normal para texto sin cursiva */
+}
+
+/* Contenedor del título */
+.title-container {
+    background-color: #ca7518;
+    width: 60%;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 4px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 6vh;
+}
+
+/* Generador de burbujas */
+.title-container .bubble {
+    position: absolute;
+    bottom: -50px;
+    width: 20px;
+    height: 20px;
+    background-color: #f8fafc;
+    /* Color de fondo sin transparencia */
+    border-radius: 50%;
+    animation: rise 10s infinite ease-in-out;
+    opacity: 1;
+    /* Opacidad completa */
+}
+
+/* Animación para las burbujas */
+@keyframes rise {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 1;
+        /* Mantener opacidad */
+    }
+
+    50% {
+        transform: translateY(-300px) translateX(50px);
+        opacity: 0.8;
+        /* Mantener opacidad */
+    }
+
+    100% {
+        transform: translateY(-400px) translateX(-30px);
+        opacity: 0;
+        /* Se desvanecen al final */
+    }
+}
+
+/* Crear múltiples burbujas con diferentes tamaños y posiciones */
+.title-container .bubble:nth-child(2) {
+    width: 15px;
+    height: 15px;
+    left: 20%;
+    animation-duration: 12s;
+}
+
+.title-container .bubble:nth-child(3) {
+    width: 25px;
+    height: 25px;
+    left: 40%;
+    animation-duration: 8s;
+    animation-delay: 2s;
+}
+
+.title-container .bubble:nth-child(4) {
+    width: 10px;
+    height: 10px;
+    left: 60%;
+    animation-duration: 9s;
+    animation-delay: 4s;
+}
+
+.title-container .bubble:nth-child(5) {
+    width: 30px;
+    height: 30px;
+    left: 80%;
+    animation-duration: 15s;
+    animation-delay: 1s;
+}
+
+/* Contenedor para el formulario */
+.form-container {
+    background-color: #cdc9ab;
+    width: 60%;
+    margin: 6vh auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para los inputs de texto */
+.form-control {
+    background-color: white;
+    border-radius: 5px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    font-size: 1.2em;
+    padding: 10px;
+    text-align: center;
+}
+
+
+/* Estilo para el botón */
+.btn-primary {
+    background-color: #0b514d;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 1.2em;
+    transition: background-color 0.3s, transform 0.3s;
+    color: white;
+    position: absolute;
+    left: 19%;
+    margin: 1vh;
+}
+
+/* Efecto al pasar el ratón */
+.btn-primary:hover {
+    background-color: #298b84;
+    transform: scale(1.05);
+}
+
+.mb-3 {
+    text-align: center;
+}
+
+.form-control {
+    display: ruby;
+    margin: 0 auto;
+}
+
+/* Contenedor para las opciones */
+.options-container {
+    background-color: #e0dbc7;
+    width: 60%;
+    margin: 5vh auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.container {
+    background-color: #fffff1;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 18vh auto;
+}
+
+/* Tabla */
+.table {
+    margin: 0 auto;
+    width: 100%;
+}
+
+.table-primary {
+    background-color: #642919;
+    color: #ffffff;
+}
+
+.table-light {
+    background-color: #b7bd84
+}
+
+.back-button a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    background-color: #1b1b13;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.back-button a:hover {
+    background-color: #54582f;
+}
+
+.back-button img {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}

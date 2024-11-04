@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Alumnos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="inicioSeccion.css" rel="stylesheet">
+    <style>
+        .form-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs .nav-link {
+            color: #000;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+
+        /* Estilo para el video de fondo */
+        video {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        /* Ajustes para el contenedor */
+        .container-fluid {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Para que el video esté en el fondo */
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            opacity: 0.5;
+        }
+
+        .logo-title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 50px;
+            height: auto;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Video de fondo con opacidad reducida -->
+    <div class="video-background">
+        <video autoplay loop muted playsinline>
+            <source src="https://videos.pexels.com/video-files/8733062/8733062-uhd_2560_1440_30fps.mp4" type="video/mp4">
+            Tu navegador no soporta la reproducción de video.
+        </video>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="container-fluid vh-100 d-flex justify-content-center align-items-center">
+        <div class="row w-75">
+            <!-- Contenedor del formulario -->
+            <div class="form-container col-md-6">
+                <div class="logo-title-container">
+                    <h1 class="text-center">Registro de Alumnos</h1>
+                    <img src="LogoUni.png" alt="Logo" class="logo">
+                </div>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="alumno-tab" data-bs-toggle="tab" data-bs-target="#alumno" type="button" role="tab" aria-controls="alumno" aria-selected="true">Alumno</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <!-- Tab de Registro de Alumno -->
+                    <div class="tab-pane fade show active" id="alumno" role="tabpanel" aria-labelledby="alumno-tab">
+                        <form id="registro-form">
+                            <div class="mb-3" style="margin-top: 20px;">
+                                <label for="nombre-completo" class="form-label">Nombre Completo</label>
+                                <input type="text" id="nombre-completo" class="form-control" placeholder="Nombre Completo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email-alumno" class="form-label">Correo Electrónico</label>
+                                <input type="email" id="email-alumno" class="form-control" placeholder="Correo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password-alumno" class="form-label">Contraseña</label>
+                                <input type="password" id="password-alumno" class="form-control" placeholder="***********" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm-password-alumno" class="form-label">Confirmar Contraseña</label>
+                                <input type="password" id="confirm-password-alumno" class="form-control" placeholder="***********" required>
+                            </div>
+                            <div class="button-container p-4">
+                                <button type="submit" class="btn btn-primary w-100 mb-2">Registrar</button>
+                                <a href="index.html" class="text-center d-block">Ya tengo cuenta</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importa las funciones necesarias de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDnLogrE97_pMkoX61w_uNSM6MwDMGN_I8",
+            authDomain: "generadorex-6ab43.firebaseapp.com",
+            projectId: "generadorex-6ab43",
+            storageBucket: "generadorex-6ab43.appspot.com",
+            messagingSenderId: "655158666019",
+            appId: "1:655158666019:web:3d3edab6b7d4aec4e02296"
+        };
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('registro-form');
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                const fullName = form['nombre-completo'].value;
+                const email = form['email-alumno'].value;
+                const password = form['password-alumno'].value;
+                const confirmPassword = form['confirm-password-alumno'].value;
+
+                // Verifica que las contraseñas coincidan
+                if (password !== confirmPassword) {
+                    alert('Las contraseñas no coinciden');
+                    return;
+                }
+
+                try {
+                    // Crea el usuario con email y contraseña
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const userId = userCredential.user.uid; // Obtiene el ID del usuario
+
+                    // Guarda el usuario en la base de datos
+                    await set(ref(database, 'users/' + userId), {
+                        id: userId,
+                        role: 'Alumno',
+                        fullName: fullName,
+                        email: email
+                    });
+
+                    alert('Alumno registrado exitosamente');
+                    form.reset();
+                } catch (error) {
+                    alert('Error al registrar el alumno: ' + error.message);
+                }
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

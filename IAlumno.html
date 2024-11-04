@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contestar Examen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+
+    <style>
+        /* Estilos generales */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f3f4;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Encabezado del formulario */
+        .header {
+            border-bottom: 3px solid #673AB7;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            color: #202124;
+            outline: none;
+            font-size: 32px;
+            border: none;
+            transition: border-bottom 0.2s;
+        }
+
+        /* Pregunta */
+        .question-container {
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+
+        .question-container p {
+            margin: 0 0 10px;
+        }
+
+        .options {
+            margin-top: 15px;
+        }
+
+        .options input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        /* Botones de acción */
+        .btn {
+            margin-top: 10px;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+</head>
+
+<body>
+    <div class="form-container mt-5">
+        <div class="header d-flex justify-content-between align-items-center mb-3">
+            <h2>Contestar Examen</h2>
+            <button id="cerrarSesion" class="btn btn-danger">Cerrar Sesión</button>
+            <button id="regresar" class="btn btn-secondary">Regresar</button>
+        </div>
+
+        <form id="exam-form">
+            <div class="mb-3">
+                <label for="codigoExamen" class="form-label">Ingrese el Código del Examen:</label>
+                <input type="text" class="form-control" id="codigoExamen" required>
+            </div>
+
+
+            <button type="submit" class="btn btn-primary">Cargar Examen</button>
+
+        </form><br />
+
+        <div id="titulo-descripcion-container"></div>
+        <div id="preguntas-container" class="mt-4"></div>
+
+
+        <button id="enviarRespuestas" class="btn btn-success" style="display: none;">Enviar Respuestas</button>
+
+        <div id="resultado" class="mt-4"></div>
+
+        <button id="imprimirPDF" class="btn btn-info" style="display:none;">Imprimir PDF</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDnLogrE97_pMkoX61w_uNSM6MwDMGN_I8",
+            authDomain: "generadorex-6ab43.firebaseapp.com",
+            projectId: "generadorex-6ab43",
+            storageBucket: "generadorex-6ab43.appspot.com",
+            messagingSenderId: "655158666019",
+            appId: "1:655158666019:web:3d3edab6b7d4aec4e02296"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+
+        let userEmail = '';
+        let respuestasCorrectas = [];
+        document.getElementById('imprimirPDF').style.display = 'none';
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userEmail = user.email;
+            } else {
+                alert("Redirigiendo a la página de inicio de sesión.");
+                window.location.href = "index.html"; // Redirigir a la página de inicio de sesión
+            }
+        });
+
+        document.getElementById('exam-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const codigoExamen = document.getElementById('codigoExamen').value;
+            cargarExamen(codigoExamen);
+        });
+
+        function cargarExamen(code) {
+            const formsRef = ref(database, 'forms/');
+
+            // Obtener todos los exámenes de todos los docentes
+            get(formsRef).then((snapshot) => {
+                let examenEncontrado = null;
+
+                if (snapshot.exists()) {
+                    snapshot.forEach(docenteSnapshot => {
+                        docenteSnapshot.forEach(examenSnapshot => {
+                            const examen = examenSnapshot.val();
+                            if (examenSnapshot.key === code) { // Comprobar si el código del examen coincide
+                                examenEncontrado = examen; // Guardar el examen encontrado
+                            }
+                        });
+                    });
+
+                    if (examenEncontrado) {
+                        // Mostrar el título y la descripción en el nuevo contenedor
+                        console.log("Título y descripción a mostrar:", examenEncontrado.title, examenEncontrado.description); // Para verificar
+
+                        const tituloDescripcionContainer = document.getElementById('titulo-descripcion-container');
+
+                        // Limpiar contenido previo para evitar duplicados
+                        tituloDescripcionContainer.innerHTML = '';
+
+                        // Crear el div para título y descripción
+                        const tituloDiv = document.createElement('div');
+                        tituloDiv.className = 'mb-4';
+                        tituloDiv.innerHTML = `<h3>${examenEncontrado.title}</h3><p>${examenEncontrado.description}</p>`;
+
+                        // Insertar el título y la descripción en el contenedor específico
+                        tituloDescripcionContainer.appendChild(tituloDiv);
+
+                        // Limpiar respuestas y ocultar el botón de imprimir y el resultado
+                        respuestasCorrectas = [];
+                        document.getElementById('enviarRespuestas').style.display = 'none';
+                        document.getElementById('imprimirPDF').style.display = 'none';
+                        document.getElementById('resultado').innerHTML = '';
+
+                        // Cargar las preguntas del examen
+                        mostrarExamen(examenEncontrado.questions);
+                    } else {
+                        alert('Examen no encontrado.');
+                    }
+                } else {
+                    alert('No hay exámenes disponibles.');
+                }
+            }).catch((error) => {
+                console.error('Error al cargar el examen:', error);
+            });
+        }
+
+
+
+
+        function mostrarTituloYDescripcion(title, description) {
+            const preguntasContainer = document.getElementById('preguntas-container');
+
+            // Limpiar contenido previo para evitar duplicados
+            preguntasContainer.innerHTML = '';
+
+            const tituloDiv = document.createElement('div');
+            tituloDiv.className = 'mb-4';
+            tituloDiv.innerHTML = `<h3>${title}</h3><p>${description}</p>`;
+
+            // Insertar el título y la descripción antes de las preguntas
+            preguntasContainer.appendChild(tituloDiv);
+        }
+
+
+
+
+        function mostrarExamen(preguntas) {
+            const preguntasContainer = document.getElementById('preguntas-container');
+            preguntasContainer.innerHTML = '';
+            respuestasCorrectas = []; // Reiniciar el arreglo de respuestas correctas
+
+            // Supongamos que tienes un arreglo `preguntas` que se obtiene de Firebase
+            preguntas.forEach((pregunta, index) => {
+                const preguntaDiv = document.createElement('div');
+                preguntaDiv.className = 'question-container mb-4';
+                preguntaDiv.innerHTML = `
+            <label class="form-label">Pregunta ${index + 1}:</label>
+            <p>${pregunta.questionText}</p>
+            <div class="options">${pregunta.options.map((opcion, opIndex) => `
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" name="respuesta${index}" value="${opcion.text}" required>
+                    <label class="form-check-label">${opcion.text}</label>
+                </div>
+            `).join('')}</div>
+        `;
+                preguntasContainer.appendChild(preguntaDiv);
+
+                // Verificar cuál es la respuesta correcta y agregarla al arreglo
+                const respuestaCorrecta = pregunta.options.find(opcion => opcion.correct);
+                if (respuestaCorrecta) {
+                    respuestasCorrectas.push(respuestaCorrecta.text);
+                } else {
+                    respuestasCorrectas.push(null); // Si no hay respuesta correcta, agregar null o manejar como prefieras
+                }
+            });
+
+
+            document.getElementById('enviarRespuestas').style.display = 'block';
+        }
+
+
+
+
+        function enviarRespuestas() {
+    const respuestas = [];
+    const preguntasContainer = document.getElementById('preguntas-container');
+    const preguntaDivs = preguntasContainer.children;
+
+    for (let i = 0; i < preguntaDivs.length; i++) {
+        const respuesta = preguntaDivs[i].querySelector(`input[name="respuesta${i}"]:checked`);
+        respuestas.push(respuesta ? respuesta.value : null);
+    }
+
+    // Comparar las respuestas con las respuestas correctas y calcular el puntaje
+    let score = 0;
+    respuestas.forEach((respuesta, index) => {
+        if (respuesta === respuestasCorrectas[index]) {
+            score++;
+        }
+    });
+
+    // Calcular calificación
+    const totalPreguntas = respuestasCorrectas.length;
+    const calificacion = (score / totalPreguntas) * 100; // Calificación de 0 a 100
+
+    const resultadoDiv = document.getElementById('resultado');
+    resultadoDiv.innerHTML = `Tu puntaje es ${score} de ${totalPreguntas} <br>Tu calificación es: ${calificacion.toFixed(2)}`;
+
+    // Obtener el código del examen ingresado
+    const codigoExamen = document.getElementById('codigoExamen').value;
+
+    // Reemplazar caracteres no permitidos en el correo
+    const emailKey = userEmail.replace(/\./g, ','); // Reemplazar puntos con comas
+
+    // Determinar estado de aprobación
+    const estado = calificacion >= 70 ? 'aprobado' : 'reprobado';
+
+    // Guardar las respuestas, calificación y estado en la base de datos
+    const respuestasRef = ref(database, `respuestas/${codigoExamen}/${emailKey}`);
+    set(respuestasRef, {
+        email: userEmail,
+        calificacion: calificacion.toFixed(2), // Guardar calificación
+        estado: estado, // Guardar estado
+        respuestas: respuestas
+    }).then(() => {
+        console.log('Respuestas guardadas con éxito.');
+
+        // Reiniciar el formulario y ocultar el botón de envío
+        preguntasContainer.innerHTML = ''; // Limpiar las preguntas
+        document.getElementById('codigoExamen').value = ''; // Limpiar el campo del código
+        document.getElementById('enviarRespuestas').style.display = 'none'; // Ocultar el botón de envío
+        document.getElementById('imprimirPDF').style.display = 'block'; // Mostrar el botón de imprimir
+        resultadoDiv.innerHTML += "<br>Examen reiniciado. Puedes ingresar un nuevo código para comenzar.";
+    }).catch((error) => {
+        console.error('Error al guardar las respuestas:', error);
+    });
+}
+
+
+
+        let nombreAlumnoGlobal = ''; // Variable global para almacenar el nombre del alumno
+
+        // Función para obtener el nombre del alumno
+        function obtenerNombreAlumno() {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const emailUsuario = user.email;
+
+                    // Referencia a la base de datos
+                    const dbRef = ref(database, 'users');
+
+                    // Obtén todos los datos en el nodo 'users'
+                    get(dbRef).then((snapshot) => {
+                        if (snapshot.exists()) {
+                            // Itera sobre cada usuario en la base de datos
+                            snapshot.forEach((childSnapshot) => {
+                                const data = childSnapshot.val();
+                                // Compara el email del usuario y que sea un alumno
+                                if (data.email === emailUsuario && data.role === 'Alumno') {
+                                    nombreAlumnoGlobal = data.fullName; // Almacena el nombre del alumno en la variable global
+                                    document.getElementById("imprimirPDF").style.display = 'none'; // Muestra el botón
+                                }
+                            });
+                        } else {
+                            console.error("No se encontraron datos en la base de datos.");
+                        }
+                    }).catch((error) => {
+                        console.error("Error al obtener los datos:", error);
+                    });
+                } else {
+                    console.error("No hay usuario autenticado.");
+                }
+            });
+        }
+
+        // Llama a obtenerNombreAlumno al cargar la página o en el momento adecuado
+        obtenerNombreAlumno();
+
+        // Función para generar el PDF
+        function generarPDF() {
+            const score = parseInt(document.getElementById('resultado').innerText.split(' ')[3]);
+            const totalPreguntas = respuestasCorrectas.length;
+            const calificacion = (score / totalPreguntas) * 100; // Asegúrate de que esta lógica se mantenga consistente
+
+            // Contenido estilizado para la constancia
+            const contenidoPDF = `
+        <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+            <h1 style="font-size: 24px; color: #333;">Constancia de Acreditación de Examen</h1>
+            <p style="font-size: 16px; color: #555; margin-top: -10px;">
+                Otorgada a:
+            </p>
+            <p style="font-size: 18px; font-weight: bold; color: #222;">${nombreAlumnoGlobal}</p>
+            <div style="border-top: 1px solid #888; margin: 20px 0;"></div>
+            <p style="font-size: 16px; color: #555;">Calificación obtenida:</p>
+            <p style="font-size: 22px; color: #222; font-weight: bold;">${score} / ${totalPreguntas} (${calificacion.toFixed(2)})</p>
+            <div style="border-top: 1px solid #888; margin: 20px 0;"></div>
+            <p style="font-size: 14px; color: #777;">Fecha de emisión: ${new Date().toLocaleDateString()}</p>
+            <p style="font-size: 12px; color: #777; margin-top: 20px;">
+                *Esta constancia es un reconocimiento del esfuerzo y dedicación del participante.*
+            </p>
+        </div>
+    `;
+
+            const opt = {
+                margin: 1,
+                filename: 'Constancia_Examen.pdf',
+                html2canvas: {},
+                jsPDF: { format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(contenidoPDF).save();
+        }
+
+
+
+
+
+
+
+
+
+
+        document.getElementById('enviarRespuestas').addEventListener('click', enviarRespuestas);
+        document.getElementById('imprimirPDF').addEventListener('click', generarPDF);
+
+        document.getElementById('cerrarSesion').addEventListener('click', function () {
+
+
+            signOut(auth).then(() => {
+                alert("Sesión cerrada");
+                window.location.href = "index.html"; // Redirigir a la página de inicio de sesión
+            }).catch((error) => {
+                console.error('Error al cerrar sesión:', error);
+            });
+        });
+
+        document.getElementById('regresar').addEventListener('click', function () {
+            window.location.href = "IAlumnoPrincipal.html"; // Cambia "pagina_anterior.html" por la URL a la que deseas redirigir
+        });
+    </script>
+</body>
+
+</html>

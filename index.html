@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio de Sesión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="inicioSeccion.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <h2>
+        Correo Docente: maria.arcoscarbajal@escuela.edu <br/>
+        Pass Docente: mar65761078
+    </h2>
+    <div class="video-background">
+        <video autoplay loop muted playsinline>
+            <source src="https://videos.pexels.com/video-files/8733062/8733062-uhd_2560_1440_30fps.mp4" type="video/mp4">
+            Tu navegador no soporta la reproducción de video.
+        </video>
+    </div>
+
+    <div class="container-fluid vh-100 d-flex justify-content-center align-items-center">
+        <div class="row w-75">
+            <div class="form-container col-md-6">
+                <div class="logo-title-container d-flex align-items-center justify-content-center mb-4">
+                    <img src="LogoUni.png" alt="Logo" class="logo me-2">
+                    <h1 class="text-center">Bienvenid@</h1>
+                </div>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="alumno-tab" data-bs-toggle="tab" data-bs-target="#alumno" type="button" role="tab" aria-controls="alumno" aria-selected="true">Alumno</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="docente-tab" data-bs-toggle="tab" data-bs-target="#docente" type="button" role="tab" aria-controls="docente" aria-selected="false">Docente</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="administrador-tab" data-bs-toggle="tab" data-bs-target="#administrador" type="button" role="tab" aria-controls="administrador" aria-selected="false">Administrador</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <!-- Tab de Alumno -->
+                    <div class="tab-pane fade show active" id="alumno" role="tabpanel" aria-labelledby="alumno-tab">
+                        <form onsubmit="iniciarSesion(event, 'alumno', 'Alumno')">
+                            <div class="mb-3" style="margin-top: 20px;">
+                                <label for="username-alumno" class="form-label">Usuario</label>
+                                <input type="email" id="username-alumno" class="form-control" placeholder="Correo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password-alumno" class="form-label">Contraseña</label>
+                                <input type="password" id="password-alumno" class="form-control" placeholder="***********" required>
+                            </div>
+                            <a href="#" class="text-decoration-none mb-3 d-block">¿Has olvidado tu contraseña?</a>
+                            <div class="button-container p-4">
+                                <button type="submit" class="btn btn-primary w-100 mb-2">Entrar</button>
+                                <a href="registroAlumno.html" class="text-center d-block">Regístrate</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Tab de Docente -->
+                    <div class="tab-pane fade" id="docente" role="tabpanel" aria-labelledby="docente-tab">
+                        <form onsubmit="iniciarSesion(event, 'docente', 'Docente')">
+                            <div class="mb-3" style="margin-top: 20px;">
+                                <label for="username-docente" class="form-label">Usuario</label>
+                                <input type="email" id="username-docente" class="form-control" placeholder="Correo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password-docente" class="form-label">Contraseña</label>
+                                <input type="password" id="password-docente" class="form-control" placeholder="***********" required>
+                            </div>
+                            <a href="#" class="text-decoration-none mb-3 d-block">¿Has olvidado tu contraseña?</a>
+                            <div class="button-container p-4">
+                                <button type="submit" class="btn btn-primary w-100 mb-2">Entrar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Tab de Administrador -->
+                    <div class="tab-pane fade" id="administrador" role="tabpanel" aria-labelledby="administrador-tab">
+                        <form onsubmit="iniciarSesion(event, 'administrador', 'Administrador')">
+                            <div class="mb-3" style="margin-top: 20px;">
+                                <label for="username-administrador" class="form-label">Usuario</label>
+                                <input type="email" id="username-administrador" class="form-control" placeholder="Correo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password-administrador" class="form-label">Contraseña</label>
+                                <input type="password" id="password-administrador" class="form-control" placeholder="***********" required>
+                            </div>
+                            <div class="button-container p-4">
+                                <button type="submit" class="btn btn-primary w-100 mb-2">Entrar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Contenedor para los videos -->
+            <div class="video-container col-md-6">
+                <video id="videoPlayer" autoplay muted playsinline></video>
+            </div>
+        </div>
+    </div>
+
+    <script src="inicioSeccion.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getDatabase, ref, get, query, orderByChild, equalTo, limitToFirst } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDnLogrE97_pMkoX61w_uNSM6MwDMGN_I8",
+            authDomain: "generadorex-6ab43.firebaseapp.com",
+            projectId: "generadorex-6ab43",
+            storageBucket: "generadorex-6ab43.appspot.com",
+            messagingSenderId: "655158666019",
+            appId: "1:655158666019:web:3d3edab6b7d4aec4e02296"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        window.iniciarSesion = async (event, tipo, requiredRole) => {
+            event.preventDefault();
+
+            const email = document.getElementById(`username-${tipo}`).value;
+            const password = document.getElementById(`password-${tipo}`).value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Usuario autenticado:', userCredential.user);
+
+                const usersRef = ref(database, 'users');
+                const consulta = query(usersRef, orderByChild("email"), equalTo(email), limitToFirst(1));
+                const snapshot = await get(consulta);
+
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    const userRole = Object.values(userData)[0].role;
+
+                    if (userRole === requiredRole) {
+                        switch (userRole) {
+                            case 'Alumno':
+                                window.location.href = "IAlumnoPrincipal.html";
+                                break;
+                            case 'Docente':
+                                window.location.href = "IDocente2.html";
+                                break;
+                            case 'Administrador':
+                                window.location.href = "IAdministrador.html";
+                                break;
+                        }
+                    } else {
+                        alert(`No tienes el rol adecuado para iniciar sesión aquí. Rol requerido: ${requiredRole}`);
+                    }
+                } else {
+                    alert("No se encontró información de rol en la base de datos.");
+                }
+            } catch (error) {
+                console.error("Error de autenticación:", error);
+                alert("Error de autenticación. Verifica tus datos.");
+            }
+        };
+    </script>
+    <script src="inicioSeccion.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

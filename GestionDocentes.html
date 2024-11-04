@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Docentes</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<style>
+    body {
+        background-color: #e5e5f7;
+        background-image: linear-gradient(135deg, #b5cad8 25%, transparent 25%), linear-gradient(225deg, #b5cad8 25%, transparent 25%), linear-gradient(45deg, #b5cad8 25%, transparent 25%), linear-gradient(315deg, #b5cad8 25%, #e5e5f7 25%);
+        background-position: 28px 0, 28px 0, 0 0, 0 0;
+        background-size: 56px 56px;
+        background-repeat: repeat;
+    }
+
+    tbody {
+        background-color: #e5e5f7;
+    }
+
+    .table th,
+    .table td {
+        text-align: center;
+        background-color: #7aabad;
+    }
+</style>
+
+<body>
+    <div class="container mt-4">
+        <h1>Gestión de Docentes</h1>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Email</th>
+                    <th>Asignatura</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="docentes-table-body">
+                <!-- Los docentes se cargarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+</body>
+
+</html>

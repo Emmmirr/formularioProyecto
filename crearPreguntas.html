@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Examen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilo para el video de fondo */
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.5;
+            /* Opacidad del video */
+        }
+
+        /* Contenedor para el formulario */
+        .form-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            /* Espaciado aumentado */
+            position: relative;
+            z-index: 1;
+            
+        }
+
+        /* Contenedor para el título */
+        .title-container {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1;
+        }
+
+        /* Espaciado entre los elementos del formulario */
+        .form-label {
+            margin-bottom: 10px;
+           
+        }
+
+        .form-check-input {
+            margin-right: 5px;
+           
+        }
+
+        /* Título de preguntas creadas */
+        .title2 {
+            margin-bottom: 20px;
+           
+        }
+    </style>
+</head>
+
+<body>
+    <div class="video-background">
+        <video autoplay loop muted playsinline>
+            <source src="https://videos.pexels.com/video-files/8733062/8733062-uhd_2560_1440_30fps.mp4"
+                type="video/mp4">
+            Tu navegador no soporta la reproducción de video.
+        </video>
+    </div>
+
+    <!-- Botón de regresar -->
+    <div class="back-button">
+        <a href="IDocente.html" class="btn btn-secondary">
+            <img src="https://cdn-icons-png.flaticon.com/512/93/93634.png" alt="Regresar" width="30" height="30">
+            Regresar
+        </a>
+    </div>
+
+    <!-- Contenedor para el formulario -->
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="form-container w-75">
+            <form id="question-form" class="p-4">
+                <h2 class="text-center">Crear Examen</h2>
+
+                <!-- Campo para ingresar el código del examen -->
+                <div class="mb-3">
+                    <label for="codigoExamen" class="form-label">Código del Examen:</label>
+                    <input type="text" id="codigoExamen" name="codigoExamen" class="form-control" required>
+                </div>
+
+                <!-- Botón para generar código aleatorio -->
+                <div class="mb-3 text-center">
+                    <button type="button" class="btn btn-secondary" id="generarCodigo">Generar Código Aleatorio</button>
+                </div>
+
+                <!-- Campo para ingresar el número de preguntas -->
+                <div class="mb-3">
+                    <label for="numeroPreguntas" class="form-label">Número de Preguntas:</label>
+                    <input type="number" id="numeroPreguntas" name="numeroPreguntas" min="1" class="form-control"
+                        required>
+                </div>
+
+                <!-- Botón para generar preguntas -->
+                <div class="mb-3 text-center">
+                    <button type="button" class="btn btn-secondary" id="generarPreguntas">Generar Preguntas</button>
+                </div>
+
+                <div id="preguntas-container"></div>
+
+                <!-- Botón de envío -->
+                <button type="submit" class="btn btn-primary w-100">Generar Examen</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="container">
+
+        <!-- Conexión a Firebase -->
+        <script type="module">
+            // Import the functions you need from the SDKs you need
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+            import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+            // Your web app's Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyDnLogrE97_pMkoX61w_uNSM6MwDMGN_I8",
+
+                authDomain: "generadorex-6ab43.firebaseapp.com",
+
+                projectId: "generadorex-6ab43",
+
+                storageBucket: "generadorex-6ab43.appspot.com",
+
+                messagingSenderId: "655158666019",
+
+                appId: "1:655158666019:web:3d3edab6b7d4aec4e02296"
+
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const database = getDatabase(app);
+
+            // Espera a que el DOM esté completamente cargado
+            document.addEventListener('DOMContentLoaded', function () {
+                // Función para generar un código aleatorio
+                document.getElementById('generarCodigo').addEventListener('click', function () {
+                    const codigoExamenInput = document.getElementById('codigoExamen');
+                    const codigoAleatorio = generarCodigoAleatorio();
+                    codigoExamenInput.value = codigoAleatorio; // Asigna el código generado al campo de entrada
+                });
+
+                // Función que genera un código aleatorio
+                function generarCodigoAleatorio() {
+                    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; // Caracteres posibles
+                    let codigo = '';
+                    const longitud = 6; // Longitud del código
+
+                    for (let i = 0; i < longitud; i++) {
+                        const indiceAleatorio = Math.floor(Math.random() * caracteres.length);
+                        codigo += caracteres.charAt(indiceAleatorio); // Genera un carácter aleatorio
+                    }
+
+                    return codigo; // Retorna el código generado
+                }
+
+                // Generar preguntas con opciones
+                document.getElementById('generarPreguntas').addEventListener('click', function () {
+                    const numeroPreguntas = document.getElementById('numeroPreguntas').value;
+                    const preguntasContainer = document.getElementById('preguntas-container');
+                    preguntasContainer.innerHTML = ''; // Limpiar el contenedor
+
+                    if (numeroPreguntas < 1) {
+                        alert('Por favor, ingresa al menos 1 pregunta.');
+                        return;
+                    }
+
+                    for (let i = 0; i < numeroPreguntas; i++) {
+                        const preguntaDiv = document.createElement('div');
+                        preguntaDiv.className = 'mb-4'; // Espaciado entre preguntas
+                        preguntaDiv.innerHTML = `
+                        <label for="pregunta${i}" class="form-label">Pregunta ${i + 1}:</label>
+                        <input type="text" id="pregunta${i}" class="form-control" required>
+
+                        <label class="form-label mt-2">Opciones:</label>
+                        <div id="opciones${i}" class="mb-3"></div>
+
+                        <button type="button" class="btn btn-secondary" onclick="agregarOpcion(${i})">Agregar Opción</button>
+                        <button type="button" class="btn btn-danger" onclick="eliminarPregunta(this)">Eliminar Pregunta</button>
+                    `;
+                        preguntasContainer.appendChild(preguntaDiv);
+                    }
+                });
+
+                // Función para agregar una opción
+                window.agregarOpcion = function (index) {
+                    const opcionesContainer = document.getElementById(`opciones${index}`);
+                    const opcionInput = document.createElement('div');
+                    opcionInput.className = 'form-check';
+                    opcionInput.innerHTML = `
+                    <input type="radio" class="form-check-input" name="respuesta${index}" required>
+                    <input type="text" class="form-control" placeholder="Opción..." required>
+                `;
+                    opcionesContainer.appendChild(opcionInput);
+                };
+
+                // Función para eliminar una pregunta
+                window.eliminarPregunta = function (boton) {
+                    const preguntaDiv = boton.parentElement;
+                    preguntaDiv.remove(); // Elimina el div de la pregunta
+                };
+                // Evento de envío del formulario
+                document.getElementById('question-form').addEventListener('submit', function (e) {
+                    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+                    const codigoExamen = document.getElementById('codigoExamen').value;
+                    const preguntas = []; // Array para almacenar las preguntas
+
+                    // Recorrer cada pregunta para extraer sus datos
+                    const preguntasContainer = document.getElementById('preguntas-container');
+                    const preguntaDivs = preguntasContainer.children;
+
+                    for (let i = 0; i < preguntaDivs.length; i++) {
+                        const pregunta = preguntaDivs[i].querySelector(`input[type="text"]`).value;
+                        const opciones = []; // Array para almacenar las opciones
+                        let solucion = null; // Inicializar solución como null
+
+                        const opcionesContainer = preguntaDivs[i].querySelector(`#opciones${i}`).children;
+                        for (let j = 0; j < opcionesContainer.length; j++) {
+                            const opcionText = opcionesContainer[j].querySelector(`input[type="text"]`).value;
+                            opciones.push(opcionText); // Agregar opción al array
+
+                            // Verificar si esta opción es la correcta
+                            const isCorrect = opcionesContainer[j].querySelector(`input[type="radio"]`).checked;
+                            if (isCorrect) {
+                                solucion = opcionText; // Guardar la opción correcta
+                            }
+                        }
+
+                        preguntas.push({
+                            codigo: codigoExamen,
+                            pregunta: pregunta,
+                            opciones: opciones,
+                            solucion: solucion // Almacena la opción correcta
+                        }); // Agregar objeto pregunta al array
+                    }
+
+                    // Guardar preguntas en Firebase
+                    guardarPreguntasEnFirebase(preguntas);
+
+                    alert('Examen generado con éxito!'); // Mensaje de éxito
+                });
+
+                // Función para guardar preguntas en Firebase
+                function guardarPreguntasEnFirebase(preguntas) {
+                    const db = getDatabase();
+                    const examRef = ref(db, 'examenes/' + document.getElementById('codigoExamen').value); // Cambia la referencia según tu estructura
+                    set(examRef, {
+                        preguntas: preguntas
+                    })
+                        .then(() => {
+                            console.log('Preguntas guardadas correctamente en Firebase');
+                        })
+                        .catch((error) => {
+                            console.error('Error al guardar en Firebase:', error);
+                        });
+                }
+            });
+        </script>
+
+        <!-- Bootstrap Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 /* Estilos generales */
 body {
     margin: 0;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 /* Contenedor del video de fondo */

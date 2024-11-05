@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Resultados</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kalnia&family=Labrada&display=swap" rel="stylesheet">
+</head>
+
+<style>
+    body {
+        background-color: #e5e5f7;
+        background-image: linear-gradient(135deg, #b5cad8 25%, transparent 25%),
+            linear-gradient(225deg, #b5cad8 25%, transparent 25%),
+            linear-gradient(45deg, #b5cad8 25%, transparent 25%),
+            linear-gradient(315deg, #b5cad8 25%, #e5e5f7 25%);
+        background-size: 28px 28px;
+    }
+
+    h2 {
+        font-family: "Kalnia", serif;
+        margin: 20px 0;
+    }
+
+    .chart-container {
+        margin-top: 30px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
+
+<body>
+    <div class="container content-container">
+        <h2>Resultados del Examen</h2>
+        <form id="resultados-form">
+            <div class="mb-3">
+                <label for="codigoExamen" class="form-label">Ingrese el Código del Examen:</label>
+                <input type="text" class="form-control" id="codigoExamen" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Ver Resultados</button>
+        </form>
+
+        <div class="chart-container mt-4">
+            <canvas id="graficoAprobadosReprobados"></canvas>
+        </div>
+        
+        <div class="chart-container mt-4">
+            <canvas id="graficoDistribucionCalificaciones"></canvas>
+        </div>
+    </div>
+
+    <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import Chart from 'https://cdn.jsdelivr.net/npm/chart.js';
+
+// Configuración de Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyDnLogrE97_pMkoX61w_uNSM6MwDMGN_I8",
+    authDomain: "generadorex-6ab43.firebaseapp.com",
+    databaseURL: "https://generadorex-6ab43-default-rtdb.firebaseio.com",
+    projectId: "generadorex-6ab43",
+    storageBucket: "generadorex-6ab43.firebasestorage.app",
+    messagingSenderId: "655158666019",
+    appId: "1:655158666019:web:3d3edab6b7d4aec4e02296"
+};
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+let chartAprobadosReprobados;
+let chartDistribucionCalificaciones;
+
+export function loadForms(docenteEmail) {
+    const sanitizedEmail = docenteEmail.replace(/[.#$[\]]/g, '_');
+    const formsRef = ref(database, 'forms/' + sanitizedEmail);
+
+    get(formsRef)
+        .then(snapshot => {
+            const formList = document.getElementById('formList');
+            formList.innerHTML = "";
+
+            if (snapshot.exists()) {
+                snapshot.forEach(childSnapshot => {
+                    const form = childSnapshot.val();
+                    const listItem = document.createElement('li');
+                    listItem.innerText = `${form.title}`;
+
+                    listItem.addEventListener('click', () => {
+                        displayFormDetails(form);
+                        loadResponses(form.code);
+                    });
+
+                    formList.appendChild(listItem);
+                });
+            } else {
+                alert("No se encontraron formularios para este docente.");
+            }
+        })
+        .catch(error => {
+            console.error("Error al cargar los formularios:", error);
+        });
+}
+
+export function displayFormDetails(form) {
+    const formDetails = document.getElementById('formDetails');
+    const formContent = document.getElementById('formContent');
+
+    formDetails.style.display = 'block';
+
+    formContent.innerHTML = `
+        <h2>${form.title}</h2>
+        <h2>${form.code}</h2>
+        <p>${form.description}</p>
+        <h3>Preguntas:</h3>
+        <ul>
+            ${form.questions.map(question => `
+                <li>
+                    <strong>${question.questionText}</strong>
+                    <ul>
+                        ${question.options.map(option => `
+                            <li>${option.text} ${option.correct ? '(Correcto)' : ''}</li>
+                        `).join('')}
+                    </ul>
+                </li>
+            `).join('')}
+        </ul>
+    `;
+}
+
+export function loadResponses(codigoExamen) {
+    console.log("Intentando cargar respuestas para el código de examen:", codigoExamen);
+
+    const responsesRef = ref(database, `respuestas/${codigoExamen}`);
+
+    get(responsesRef)
+        .then(snapshot => {
+            const responseContainer = document.getElementById('formContent');
+            const responsesSection = document.createElement('div');
+            responsesSection.innerHTML = `<h3>Respuestas de los Alumnos:</h3>`;
+            const responseList = document.createElement('ul');
+
+            if (snapshot.exists()) {
+                const datos = snapshot.val();
+                const calificaciones = [];
+                let aprobados = 0;
+                let reprobados = 0;
+
+                Object.values(datos).forEach(usuario => {
+                    const calificacion = usuario.calificacion;
+                    const estado = usuario.estado;
+
+                    if (estado === "aprobado") {
+                        aprobados++;
+                    } else if (estado === "reprobado") {
+                        reprobados++;
+                    }
+
+                    calificaciones.push(calificacion);
+                });
+
+                // Grafica de Aprobados y Reprobados
+                graficarAprobadosReprobados(aprobados, reprobados);
+                
+                const distribucionCalificaciones = contarCalificaciones(calificaciones);
+                // Grafica de Distribución de Calificaciones
+                graficarDistribucionCalificaciones(distribucionCalificaciones);
+
+                snapshot.forEach(childSnapshot => {
+                    const alumnoEmail = childSnapshot.key.replace(/,/g, '.');
+                    const alumnoData = childSnapshot.val();
+
+                    if (alumnoData && alumnoData.calificacion && alumnoData.estado && alumnoData.respuestas) {
+                        const alumnoItem = document.createElement('li');
+                        alumnoItem.innerHTML = `
+                            <strong>Alumno:</strong> ${alumnoEmail}<br>
+                            <strong>Calificación:</strong> ${alumnoData.calificacion}<br>
+                            <strong>Estado:</strong> ${alumnoData.estado}<br>
+                            <strong>Respuestas:</strong>
+                            <ul>
+                                ${alumnoData.respuestas.map((respuesta, index) => `
+                                    <li><strong>Pregunta ${index + 1}:</strong> ${respuesta}</li>
+                                `).join('')}
+                            </ul><br>
+                        `;
+                        responseList.appendChild(alumnoItem);
+                    }
+                });
+                responsesSection.appendChild(responseList);
+            } else {
+                const noResponsesMessage = document.createElement('p');
+                noResponsesMessage.innerText = "No se encontraron respuestas para este examen.";
+                responsesSection.appendChild(noResponsesMessage);
+            }
+
+            responseContainer.appendChild(responsesSection);
+        })
+        .catch(error => {
+            console.error("Error al cargar las respuestas:", error);
+        });
+}
+
+
+function contarCalificaciones(calificaciones) {
+    const distribucion = { 100: 0, 90: 0, 80: 0, 70: 0, 60: 0, 50: 0, 40: 0, 30: 0, 20: 0, 10: 0, 0: 0 };
+
+    calificaciones.forEach(calificacion => {
+        const rango = Math.floor(calificacion / 10) * 10;
+        distribucion[rango] = (distribucion[rango] || 0) + 1;
+    });
+
+    return distribucion;
+}
+
+function graficarAprobadosReprobados(aprobados, reprobados) {
+    const ctx = document.getElementById('graficoAprobadosReprobados').getContext('2d');
+    if (chartAprobadosReprobados) chartAprobadosReprobados.destroy();
+    chartAprobadosReprobados = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Aprobados', 'Reprobados'],
+            datasets: [{
+                data: [aprobados, reprobados],
+                backgroundColor: ['#4BC0C0', '#FF6384'],
+                borderColor: ['#4BC0C0', '#FF6384'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const label = context.label || '';
+                            const value = context.raw;
+                            return `${label}: ${value} alumnos`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function graficarDistribucionCalificaciones(distribucionCalificaciones) {
+    const ctx = document.getElementById('graficoDistribucionCalificaciones').getContext('2d');
+    if (chartDistribucionCalificaciones) chartDistribucionCalificaciones.destroy();
+    chartDistribucionCalificaciones = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(distribucionCalificaciones),
+            datasets: [{
+                label: 'Cantidad de Alumnos',
+                data: Object.values(distribucionCalificaciones),
+                backgroundColor: '#4BC0C0',
+                borderColor: '#4BC0C0',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Alumnos'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Calificación'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+}
+
+export function initializeViewForms() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            const docenteEmail = user.email;
+            loadForms(docenteEmail);
+        } else {
+            alert("Por favor, inicie sesión para ver sus formularios.");
+        }
+    });
+}
+
+    </script>
+</body>
+
+</html>

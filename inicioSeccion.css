@@ -23,7 +23,7 @@ body {
     background-color: rgba(255, 255, 255, 0.5); /* Fondo blanco semitransparente */
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    padding: 0px;
     height: 100%;
     max-height: 600px; /* Limita la altura máxima del contenedor */
     overflow: hidden; /* Oculta cualquier contenido que exceda el contenedor */
